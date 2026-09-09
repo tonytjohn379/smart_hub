@@ -825,13 +825,30 @@ def delete_contact(contact_id):
     return redirect(url_for('admin_dashboard'))
 
 def create_admin():
-    admin = User.query.filter_by(email="admin@smartservice.com").first()
+    admin_email = os.environ.get("ADMIN_EMAIL")
+    admin_password = os.environ.get("ADMIN_PASSWORD")
+
+    if not admin_email or not admin_password:
+        print("ADMIN_EMAIL or ADMIN_PASSWORD is not configured.")
+        return
+
+    admin = User.query.filter_by(email=admin_email).first()
+
     if not admin:
-        hashed_pw = bcrypt.generate_password_hash("admin123").decode('utf-8')
-        admin = User(username="SuperAdmin", email="admin@smartservice.com", password=hashed_pw, role="admin", is_verified=True)
+        hashed_pw = bcrypt.generate_password_hash(admin_password).decode('utf-8')
+
+        admin = User(
+            username="SuperAdmin",
+            email=admin_email,
+            password=hashed_pw,
+            role="admin",
+            is_verified=True
+        )
+
         db.session.add(admin)
         db.session.commit()
-        print(">>> ADMIN READY: admin@smartservice.com / admin123")
+
+        print(">>> ADMIN ACCOUNT CREATED")
 
 if __name__ == '__main__':
     with app.app_context():

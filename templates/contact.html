@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-10">
+        <div class="admin-card">
+            <div class="card-header" style="background: linear-gradient(135deg, #6366f1, #4338ca); color: #fff;">
+                <h4 class="mb-0"><i class="fas fa-headset me-2"></i> Contact Support</h4>
+            </div>
+            <div class="card-body p-5">
+                <div class="row mb-5">
+                    <div class="col-md-4">
+                        <div class="text-center p-4 rounded-4 h-100" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <i class="fas fa-phone-alt fs-2 text-indigo-600 mb-3" style="color: #6366f1;"></i>
+                            <h6 class="fw-bold">Phone Support</h6>
+                            <p class="text-dark fw-semibold mb-1">+1 (555) 123-4567</p>
+                            <small class="text-muted">Mon - Fri, 9 AM - 6 PM</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-4 rounded-4 h-100" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <i class="fas fa-envelope fs-2 text-indigo-600 mb-3" style="color: #6366f1;"></i>
+                            <h6 class="fw-bold">Email Us</h6>
+                            <p class="text-dark fw-semibold mb-1">support@smarthub.com</p>
+                            <small class="text-muted">Response within 24h</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-4 rounded-4 h-100" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                            <i class="fas fa-map-marker-alt fs-2 text-indigo-600 mb-3" style="color: #6366f1;"></i>
+                            <h6 class="fw-bold">Our Office</h6>
+                            <p class="text-muted small mb-0">123 Service Street, Tech City</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row bg-light rounded-4 p-4 border mx-0">
+                    <div class="col-12">
+                        <h4 class="fw-bold mb-4">Send us a Message</h4>
+                        <form method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold small">Your Name</label>
+                                    <input type="text" class="form-control" name="name" style="border-radius: 8px;" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold small">Email Address</label>
+                                    <input type="email" class="form-control" name="email" style="border-radius: 8px;" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-semibold small">Message Content</label>
+                                    <textarea class="form-control" name="message" rows="4" style="border-radius: 8px;" required></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-indigo text-white px-5 py-2 fw-bold" style="background: #6366f1; border-radius: 10px;">
+                                        <i class="fas fa-paper-plane me-2"></i> Submit Inquiry
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

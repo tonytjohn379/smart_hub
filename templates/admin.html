@@ -1,0 +1,743 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    /* ===== ADMIN PANEL SPECIFIC STYLES ===== */
+    /* Stat Cards */
+    .stat-card {
+        border: none; border-radius: 16px; padding: 1.5rem;
+        color: #fff; position: relative; overflow: hidden;
+        transition: transform .3s ease, box-shadow .3s ease;
+        cursor: default;
+        margin-bottom: 1.5rem;
+    }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.15); }
+    .stat-card .stat-icon {
+        position: absolute; right: 16px; top: 16px;
+        font-size: 2.5rem; opacity: .2;
+    }
+    .stat-card h2 { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
+    .stat-card p { margin: 0; opacity: .85; font-size: .85rem; font-weight: 500; }
+    .stat-card.gradient-purple { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .stat-card.gradient-teal { background: linear-gradient(135deg, #11998e, #38ef7d); }
+    .stat-card.gradient-orange { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    .stat-card.gradient-blue { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .stat-card.gradient-gold { background: linear-gradient(135deg, #f7971e, #ffd200); }
+    .stat-card.gradient-indigo { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+
+    /* Tab Content Panels */
+    .tab-panel { display: none; animation: fadeIn .35s ease; }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Tables */
+    .admin-table { font-size: .875rem; }
+    .admin-table th { font-weight: 600; color: #6b7280; text-transform: uppercase; font-size: .75rem; letter-spacing: .5px; border-top: none; }
+    .admin-table td { vertical-align: middle; }
+
+    /* Search Input */
+    .search-box {
+        border: 2px solid #e5e7eb; border-radius: 12px;
+        padding: 8px 16px; font-size: .875rem;
+        transition: border-color .2s;
+    }
+    .search-box:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.15); outline: none; }
+
+    /* Status Badges */
+    .badge-status { padding: 5px 12px; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+
+    /* Count-up animation */
+    .count-up { transition: all 1s ease-out; }
+
+    /* Chart containers */
+    .chart-container { position: relative; height: 280px; }
+    .avatar-provider { background: #6366f1; }
+    .avatar-customer { background: #10b981; }
+</style>
+
+<div id="admin-content-area">
+
+        <!-- ===== TAB: DASHBOARD ===== -->
+        <div id="tab-dashboard" class="tab-panel active">
+            <h3 class="fw-bold mb-1">Dashboard Overview</h3>
+            <p class="text-muted mb-4">Real-time platform metrics and insights</p>
+
+            <!-- Stat Cards Row -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4 col-lg-2">
+                    <div class="stat-card gradient-purple">
+                        <i class="fas fa-users stat-icon"></i>
+                        <h2 class="count-up" data-target="{{ stats.users }}">0</h2>
+                        <p>Customers</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <div class="stat-card gradient-teal">
+                        <i class="fas fa-hard-hat stat-icon"></i>
+                        <h2 class="count-up" data-target="{{ stats.providers }}">0</h2>
+                        <p>Providers</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <div class="stat-card gradient-blue">
+                        <i class="fas fa-check-circle stat-icon"></i>
+                        <h2 class="count-up" data-target="{{ stats.verified }}">0</h2>
+                        <p>Verified</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <div class="stat-card gradient-orange">
+                        <i class="fas fa-clock stat-icon"></i>
+                        <h2 class="count-up" data-target="{{ stats.pending }}">0</h2>
+                        <p>Pending</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <div class="stat-card gradient-gold">
+                        <i class="fas fa-calendar stat-icon"></i>
+                        <h2 class="count-up" data-target="{{ stats.bookings }}">0</h2>
+                        <p>Bookings</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <div class="stat-card gradient-indigo">
+                        <i class="fas fa-star stat-icon"></i>
+                        <h2 class="count-up" data-target="{{ stats.reviews }}">0</h2>
+                        <p>Reviews</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue Banner -->
+            <div class="admin-card mb-4">
+                <div class="card-body" style="background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 16px; color: #fff;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="mb-1 opacity-75"><i class="fas fa-coins me-2"></i>Total Verified Revenue</p>
+                            <h2 class="fw-bold mb-0">₹{{ "%.2f"|format(stats.revenue) }}</h2>
+                        </div>
+                        <div class="text-end">
+                            <i class="fas fa-chart-line" style="font-size: 3rem; opacity: .2;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="admin-card">
+                        <div class="card-header"><i class="fas fa-chart-pie me-2 text-purple"></i> Service Distribution</div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="serviceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="admin-card">
+                        <div class="card-header"><i class="fas fa-chart-bar me-2 text-primary"></i> Booking Status Overview</div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="bookingChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Activity Feed -->
+            <div class="admin-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-bolt me-2 text-warning"></i> Recent Bookings</span>
+                    <a href="#" onclick="switchTab('bookings', document.querySelector('[onclick*=bookings]'))" class="text-decoration-none text-primary small">View All →</a>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table admin-table mb-0">
+                        <thead><tr><th>Customer</th><th>Provider</th><th>Service</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody>
+                        {% for b in all_bookings[:5] %}
+                        <tr>
+                            <td><strong>{{ b.customer_name }}</strong></td>
+                            <td>{{ b.provider_name }}</td>
+                            <td>{{ b.service_type }}</td>
+                            <td>
+                                {% if b.status == 'pending' %}<span class="badge-status bg-warning text-dark">Pending</span>
+                                {% elif b.status == 'confirmed' %}<span class="badge-status bg-info text-white">Confirmed</span>
+                                {% elif b.status == 'completed' %}<span class="badge-status bg-success">Completed</span>
+                                {% elif b.status == 'cancelled' %}<span class="badge-status bg-danger">Cancelled</span>
+                                {% else %}<span class="badge-status bg-secondary">{{ b.status }}</span>{% endif %}
+                            </td>
+                            <td class="text-muted small">{{ b.scheduled_at.strftime('%b %d, %Y') if b.scheduled_at else '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% if not all_bookings %}<tr><td colspan="5" class="text-center text-muted py-4">No bookings yet</td></tr>{% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: PROVIDERS ===== -->
+        <div id="tab-providers" class="tab-panel">
+            <h3 class="fw-bold mb-1"><i class="fas fa-user-shield me-2"></i>Provider Verification</h3>
+            <p class="text-muted mb-4">Review and approve service providers</p>
+
+            {% if pending_providers %}
+            <div class="admin-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-exclamation-triangle text-warning me-2"></i> Pending Approval</span>
+                    <span class="badge bg-warning text-dark">{{ stats.pending }} pending</span>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table admin-table mb-0">
+                        <thead>
+                            <tr><th>Name</th><th>Service</th><th>Location</th><th>ID Proof</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for p in pending_providers %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px;height:36px;font-size:.8rem;font-weight:600;">{{ p.username[:2]|upper }}</div>
+                                    <div>
+                                        <strong>{{ p.username }}</strong>
+                                        <div class="text-muted small">{{ p.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ p.service_type }}</span></td>
+                            <td><i class="fas fa-map-marker-alt text-danger me-1"></i>{{ p.location_name }}</td>
+                            <td>
+                                {% if p.verification_file %}
+                                    <a href="{{ url_for('static', filename='uploads/' + p.verification_file) }}" target="_blank" class="btn btn-sm btn-outline-info"><i class="fas fa-file-alt me-1"></i>View Doc</a>
+                                {% else %}
+                                    <span class="text-danger small"><i class="fas fa-times-circle me-1"></i>Not Uploaded</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('approve_provider', user_id=p.id) }}" class="btn btn-sm btn-success me-1"><i class="fas fa-check me-1"></i>Approve</a>
+                                <a href="{{ url_for('delete_user', user_id=p.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Reject and remove this provider?')"><i class="fas fa-times me-1"></i>Reject</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="admin-card mb-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-check-double text-success" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">All Caught Up!</h5>
+                    <p class="text-muted">No providers waiting for verification.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- All Providers List -->
+            <div class="admin-card">
+                <div class="card-header"><i class="fas fa-list me-2"></i> All Registered Providers</div>
+                <div class="card-body p-0">
+                    <table class="table admin-table mb-0">
+                        <thead><tr><th>Name</th><th>Service</th><th>Location</th><th>Rating</th><th>Status</th></tr></thead>
+                        <tbody>
+                        {% for u in all_users if u.role == 'provider' %}
+                        <tr>
+                            <td><strong>{{ u.username }}</strong></td>
+                            <td>{{ u.service_type }}</td>
+                            <td>{{ u.location_name or '—' }}</td>
+                            <td>⭐ {{ u.rating or '—' }}</td>
+                            <td>
+                                {% if u.is_verified %}<span class="badge-status bg-success">Verified</span>
+                                {% else %}<span class="badge-status bg-warning text-dark">Pending</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: USERS ===== -->
+        <div id="tab-users" class="tab-panel">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1"><i class="fas fa-users me-2"></i>User Management</h3>
+                    <p class="text-muted mb-0">Manage customers and provider accounts</p>
+                </div>
+                <input type="text" class="search-box" id="userSearchInput" placeholder="🔍 Search users..." onkeyup="filterUsers()">
+            </div>
+
+            <div class="admin-card">
+                <div class="card-body p-0">
+                    <table class="table admin-table mb-0" id="usersTable">
+                        <thead>
+                            <tr><th>ID</th><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for u in all_users %}
+                        <tr>
+                            <td class="text-muted">#{{ u.id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white {{ 'avatar-provider' if u.role == 'provider' else 'avatar-customer' }}" style="width:32px;height:32px;font-size:.7rem;font-weight:700;">{{ u.username[:2]|upper }}</div>
+                                    <strong>{{ u.username }}</strong>
+                                </div>
+                            </td>
+                            <td>{{ u.email }}</td>
+                            <td>
+                                {% if u.role == 'provider' %}<span class="badge bg-indigo-100 text-indigo-700" style="background:#eef2ff;color:#4338ca;">Provider</span>
+                                {% else %}<span class="badge" style="background:#ecfdf5;color:#065f46;">Customer</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if u.is_verified %}<span class="badge-status bg-success">Active</span>
+                                {% else %}<span class="badge-status bg-warning text-dark">Pending</span>{% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('delete_user', user_id=u.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this account permanently?')">
+                                    <i class="fas fa-trash-alt me-1"></i>Remove
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: BOOKINGS ===== -->
+        <div id="tab-bookings" class="tab-panel">
+            <h3 class="fw-bold mb-1"><i class="fas fa-calendar-check me-2"></i>All Bookings</h3>
+            <p class="text-muted mb-4">Monitor booking activity across the platform</p>
+
+            <div class="admin-card">
+                <div class="card-body p-0">
+                    <table class="table admin-table mb-0">
+                        <thead><tr><th>#</th><th>Customer</th><th>Provider</th><th>Service</th><th>Scheduled</th><th>Status</th></tr></thead>
+                        <tbody>
+                        {% for b in all_bookings %}
+                        <tr>
+                            <td class="text-muted">{{ b.id }}</td>
+                            <td><strong>{{ b.customer_name }}</strong></td>
+                            <td>{{ b.provider_name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ b.service_type }}</span></td>
+                            <td class="small">{{ b.scheduled_at.strftime('%b %d, %Y %H:%M') if b.scheduled_at else '—' }}</td>
+                            <td>
+                                {% if b.status == 'pending' %}<span class="badge-status bg-warning text-dark">Pending</span>
+                                {% elif b.status == 'confirmed' %}<span class="badge-status bg-info text-white">Confirmed</span>
+                                {% elif b.status == 'completed' %}<span class="badge-status bg-success">Completed</span>
+                                {% elif b.status == 'cancelled' %}<span class="badge-status bg-danger">Cancelled</span>
+                                {% else %}<span class="badge-status bg-secondary">{{ b.status }}</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not all_bookings %}<tr><td colspan="6" class="text-center text-muted py-4">No bookings recorded</td></tr>{% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: PAYMENTS ===== -->
+        <div id="tab-payments" class="tab-panel">
+            <h3 class="fw-bold mb-1"><i class="fas fa-credit-card me-2"></i>Payment Transactions</h3>
+            <p class="text-muted mb-4">Track all payment activity</p>
+
+            <!-- Revenue Summary Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="stat-card gradient-teal">
+                        <i class="fas fa-check-circle stat-icon"></i>
+                        <h2>₹{{ "%.2f"|format(stats.revenue) }}</h2>
+                        <p>Verified Revenue</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stat-card gradient-gold">
+                        <i class="fas fa-hourglass-half stat-icon"></i>
+                        <h2>{{ all_payments|length }}</h2>
+                        <p>Total Transactions</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="card-body p-0">
+                    <table class="table admin-table mb-0">
+                        <thead><tr><th>#</th><th>Payer</th><th>Provider</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody>
+                        {% for p in all_payments %}
+                        <tr>
+                            <td class="text-muted">{{ p.id }}</td>
+                            <td><strong>{{ p.payer_name }}</strong></td>
+                            <td>{{ p.provider_name }}</td>
+                            <td class="fw-bold">₹{{ "%.2f"|format(p.amount) }}</td>
+                            <td>
+                                {% if p.status == 'verified' %}<span class="badge-status bg-success">Verified</span>
+                                {% elif p.status == 'proof_submitted' %}<span class="badge-status bg-info text-white">Proof Submitted</span>
+                                {% elif p.status == 'requested' %}<span class="badge-status bg-warning text-dark">Requested</span>
+                                {% elif p.status == 'rejected' %}<span class="badge-status bg-danger">Rejected</span>
+                                {% else %}<span class="badge-status bg-secondary">{{ p.status }}</span>{% endif %}
+                            </td>
+                            <td class="small text-muted">{{ p.created_at.strftime('%b %d, %Y') if p.created_at else '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% if not all_payments %}<tr><td colspan="6" class="text-center text-muted py-4">No payment records</td></tr>{% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: MESSAGES ===== -->
+        <div id="tab-messages" class="tab-panel">
+            <h3 class="fw-bold mb-1"><i class="fas fa-envelope me-2"></i>Contact Messages</h3>
+            <p class="text-muted mb-4">{{ contact_count }} message{{ 's' if contact_count != 1 else '' }} received</p>
+
+            {% if contacts %}
+            <div class="row g-3">
+                {% for c in contacts %}
+                <div class="col-md-6">
+                    <div class="admin-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width:40px;height:40px;font-weight:600;font-size:.85rem;">{{ c.name[:2]|upper }}</div>
+                                    <div>
+                                        <strong>{{ c.name }}</strong>
+                                        <div class="text-muted small">{{ c.email }}</div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ c.created_at.strftime('%b %d, %H:%M') }}</small>
+                            </div>
+                            <p class="mb-3" style="color: #374151; line-height: 1.6;">{{ c.message }}</p>
+                            <a href="{{ url_for('delete_contact', contact_id=c.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this message?')">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="admin-card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-inbox text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Messages</h5>
+                    <p class="text-muted">No contact messages have been received yet.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ===== TAB: AI ANALYTICS ===== -->
+        <div id="tab-ai_analytics" class="tab-panel">
+            <h3 class="fw-bold mb-1"><i class="fas fa-robot me-2"></i>AI Recommendation Analytics</h3>
+            <p class="text-muted mb-4">Insights from the SmartHub AI recommendation engine</p>
+
+            <!-- Algorithm Info -->
+            <div class="admin-card mb-4">
+                <div class="card-body" style="background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 16px; color: #fff;">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="mb-2"><i class="fas fa-brain me-2"></i>SmartHub AI v1.0</h4>
+                            <p class="opacity-75 mb-3">Weighted composite scoring algorithm for intelligent provider matching</p>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="text-center">
+                                    <div class="fw-bold" style="font-size: 1.5rem;">40%</div>
+                                    <small class="opacity-75">Distance</small>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold" style="font-size: 1.5rem;">30%</div>
+                                    <small class="opacity-75">Rating</small>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold" style="font-size: 1.5rem;">15%</div>
+                                    <small class="opacity-75">Availability</small>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold" style="font-size: 1.5rem;">15%</div>
+                                    <small class="opacity-75">Reviews</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-network-wired" style="font-size: 5rem; opacity: .15;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Test Tool -->
+            <div class="admin-card mb-4">
+                <div class="card-header"><i class="fas fa-flask me-2"></i> Test AI Recommendations</div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Service Type</label>
+                            <select id="aiTestService" class="form-select">
+                                {% for s in service_labels %}
+                                <option value="{{ s }}">{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Latitude</label>
+                            <input type="number" step="any" id="aiTestLat" class="form-control" placeholder="e.g. 19.076">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Longitude</label>
+                            <input type="number" step="any" id="aiTestLon" class="form-control" placeholder="e.g. 72.877">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" onclick="testAIRecommendation()"><i class="fas fa-play me-1"></i>Run Test</button>
+                        </div>
+                    </div>
+                    <div id="aiTestResults" class="mt-4" style="display:none;">
+                        <h6 class="fw-bold"><i class="fas fa-list-ol me-1"></i> Results:</h6>
+                        <div id="aiTestOutput"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Coverage Stats -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="admin-card">
+                        <div class="card-header"><i class="fas fa-map-marked-alt me-2"></i> Service Coverage</div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="coverageChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="admin-card">
+                        <div class="card-header"><i class="fas fa-star-half-alt me-2"></i> Rating Distribution</div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="ratingChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /tab-ai_analytics -->
+</div><!-- /admin-content-area -->
+
+<script>
+// ===== TAB SWITCHING =====
+// ===== TAB SWITCHING LOGIC =====
+function switchTab(tabName) {
+    const targetTab = document.getElementById('tab-' + tabName);
+    if (!targetTab) return;
+
+    // Update panels
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    targetTab.classList.add('active');
+
+    // Update sidebar active states
+    document.querySelectorAll('.sidebar-nav a').forEach(a => {
+        a.classList.remove('active');
+        const href = a.getAttribute('href');
+        if (href && (href.endsWith('#tab-' + tabName) || (tabName === 'dashboard' && !href.includes('#tab-')))) {
+            a.classList.add('active');
+        }
+    });
+
+    // Optional: Animate count-up if switching to dashboard
+    if (tabName === 'dashboard') animateCountUp();
+}
+
+// Handle hash changes for better navigation
+function handleHashTab() {
+    const hash = window.location.hash;
+    if (hash.startsWith('#tab-')) {
+        switchTab(hash.replace('#tab-', ''));
+    } else {
+        switchTab('dashboard');
+    }
+}
+
+window.addEventListener('hashchange', handleHashTab);
+window.addEventListener('DOMContentLoaded', handleHashTab);
+
+// ===== COUNT-UP ANIMATION =====
+function animateCountUp() {
+    document.querySelectorAll('.count-up').forEach(el => {
+        const target = parseInt(el.getAttribute('data-target')) || 0;
+        const duration = 1200;
+        const step = target / (duration / 16);
+        let current = 0;
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                el.textContent = target;
+                clearInterval(timer);
+            } else {
+                el.textContent = Math.floor(current);
+            }
+        }, 16);
+    });
+}
+animateCountUp();
+
+// ===== USER SEARCH / FILTER =====
+function filterUsers() {
+    const query = document.getElementById('userSearchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+    });
+}
+
+// ===== AI TEST TOOL =====
+function testAIRecommendation() {
+    const service = document.getElementById('aiTestService').value;
+    const lat = document.getElementById('aiTestLat').value;
+    const lon = document.getElementById('aiTestLon').value;
+    let url = `/api/recommendations?service=${encodeURIComponent(service)}`;
+    if (lat) url += `&lat=${lat}`;
+    if (lon) url += `&lon=${lon}`;
+
+    document.getElementById('aiTestResults').style.display = 'block';
+    document.getElementById('aiTestOutput').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Running AI analysis...</div>';
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            if (data.recommendations && data.recommendations.length > 0) {
+                let html = `<div class="small text-muted mb-3">${data.algorithm}</div>`;
+                data.recommendations.forEach((r, i) => {
+                    html += `
+                    <div class="border rounded-3 p-3 mb-2" style="background:#fafafa;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="text-primary">#${i+1} ${r.username}</strong>
+                                <span class="badge bg-light text-dark border ms-2">${r.service_type}</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-success" style="font-size:.85rem;">${r.score}% match</span>
+                            </div>
+                        </div>
+                        <div class="mt-2 small text-muted">
+                            <i class="fas fa-map-marker-alt me-1"></i>${r.location_name}
+                            ${r.distance_km !== null ? ' · ' + r.distance_km + ' km' : ''}
+                            · ⭐ ${r.rating} · ${r.review_count} reviews
+                            · ${r.is_available ? '<span class="text-success">Available</span>' : '<span class="text-danger">Busy</span>'}
+                        </div>
+                        <div class="mt-1">${r.reasons.map(x => '<span class="badge bg-light text-dark border me-1 mb-1" style="font-size:.7rem;">'+x+'</span>').join('')}</div>
+                        <div class="mt-2 d-flex gap-2" style="font-size:.75rem;">
+                            <span title="Distance">📍 ${r.score_breakdown.distance}%</span>
+                            <span title="Rating">⭐ ${r.score_breakdown.rating}%</span>
+                            <span title="Availability">✅ ${r.score_breakdown.availability}%</span>
+                            <span title="Reviews">📝 ${r.score_breakdown.review_volume}%</span>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('aiTestOutput').innerHTML = html;
+            } else {
+                document.getElementById('aiTestOutput').innerHTML = '<div class="text-muted">No providers found for this service.</div>';
+            }
+        })
+        .catch(err => {
+            document.getElementById('aiTestOutput').innerHTML = '<div class="text-danger">Error: ' + err.message + '</div>';
+        });
+}
+
+// ===== CHARTS =====
+// Service Distribution Doughnut
+const serviceLabels = JSON.parse('{{ service_labels|tojson }}');
+const serviceData = JSON.parse('{{ service_data|tojson }}');
+const serviceColors = ['#667eea','#f5576c','#38ef7d','#4facfe','#ffd200','#f093fb','#11998e','#764ba2'];
+
+if (document.getElementById('serviceChart') && serviceLabels.length > 0) {
+    new Chart(document.getElementById('serviceChart'), {
+        type: 'doughnut',
+        data: {
+            labels: serviceLabels,
+            datasets: [{ data: serviceData, backgroundColor: serviceColors.slice(0, serviceLabels.length), borderWidth: 0, hoverOffset: 8 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16, font: { family: 'Inter', size: 12 } } }
+            }
+        }
+    });
+}
+
+// Booking Status Bar Chart
+fetch('/api/admin/stats')
+    .then(r => r.json())
+    .then(stats => {
+        // Booking Chart
+        if (document.getElementById('bookingChart') && stats.booking_statuses) {
+            const bLabels = Object.keys(stats.booking_statuses);
+            const bData = Object.values(stats.booking_statuses);
+            const bColors = bLabels.map(l => {
+                if (l === 'pending') return '#fbbf24';
+                if (l === 'confirmed') return '#60a5fa';
+                if (l === 'completed') return '#34d399';
+                if (l === 'cancelled') return '#f87171';
+                return '#9ca3af';
+            });
+            new Chart(document.getElementById('bookingChart'), {
+                type: 'bar',
+                data: {
+                    labels: bLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
+                    datasets: [{ label: 'Bookings', data: bData, backgroundColor: bColors, borderRadius: 8, borderSkipped: false }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Rating Distribution
+        if (document.getElementById('ratingChart') && stats.rating_distribution) {
+            const rLabels = ['1','2','3','4','5'];
+            const rData = rLabels.map(l => stats.rating_distribution[l] || 0);
+            new Chart(document.getElementById('ratingChart'), {
+                type: 'bar',
+                data: {
+                    labels: rLabels.map(l => l + ' ⭐'),
+                    datasets: [{ label: 'Reviews', data: rData, backgroundColor: ['#f87171','#fb923c','#fbbf24','#a3e635','#34d399'], borderRadius: 8, borderSkipped: false }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Coverage (same as service distribution but as a bar for AI tab)
+        if (document.getElementById('coverageChart') && stats.service_distribution) {
+            const cLabels = Object.keys(stats.service_distribution);
+            const cData = Object.values(stats.service_distribution);
+            new Chart(document.getElementById('coverageChart'), {
+                type: 'polarArea',
+                data: {
+                    labels: cLabels,
+                    datasets: [{ data: cData, backgroundColor: serviceColors.slice(0, cLabels.length).map(c => c + 'cc') }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { family: 'Inter', size: 11 } } } }
+                }
+            });
+        }
+    })
+    .catch(err => console.log('Stats fetch error:', err));
+</script>
+{% endblock %}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Service Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f0f2f5; }
+        
+        /* ===== GLOBAL ADMIN THEME ===== */
+        .admin-wrapper { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: 260px; min-width: 260px;
+            background: linear-gradient(180deg, #0f0c29, #302b63, #24243e);
+            padding: 1.5rem 0; color: #fff;
+            box-shadow: 4px 0 24px rgba(0,0,0,.3);
+            position: sticky; top: 0; height: 100vh; overflow-y: auto;
+            z-index: 1000;
+        }
+        .admin-sidebar .sidebar-brand {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+            margin-bottom: 1rem;
+        }
+        .admin-sidebar .sidebar-brand h4 { margin: 0; font-weight: 700; letter-spacing: -0.5px; }
+        .admin-sidebar .sidebar-brand small { opacity: .6; font-size: .75rem; }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav li a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 24px; color: rgba(255,255,255,.7);
+            text-decoration: none; font-weight: 500; font-size: .9rem;
+            transition: all .25s ease; border-left: 3px solid transparent;
+        }
+        .sidebar-nav li a:hover, .sidebar-nav li a.active {
+            color: #fff; background: rgba(255,255,255,.08);
+            border-left-color: #7c3aed;
+        }
+        .sidebar-nav li a i { width: 20px; text-align: center; font-size: 1rem; }
+
+        /* Main Content */
+        .admin-main { flex: 1; padding: 2rem; overflow-y: auto; }
+
+        /* Cards */
+        .admin-card {
+            border: none; border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,.06);
+            background: #fff; overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .admin-card .card-header {
+            background: #fff; border-bottom: 1px solid #eee;
+            padding: 1rem 1.5rem; font-weight: 600;
+        }
+        .admin-card .card-body { padding: 1.5rem; }
+
+        /* Top Bar for Mobile/General */
+        .top-navbar {
+            background: #fff; border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 1.5rem; margin: -2rem -2rem 2rem -2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        @media (max-width: 991px) {
+            .admin-sidebar { display: none; } /* Mobile toggle would go here */
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        {% if current_user.is_authenticated %}
+        <!-- ===== SIDEBAR ===== -->
+        <div class="admin-sidebar">
+            <div class="sidebar-brand">
+                <h4>⚡ SmartHub</h4>
+                <small>Premium Service Network</small>
+            </div>
+            <ul class="sidebar-nav">
+                {% if current_user.role == 'admin' %}
+                    <li><a href="{{ url_for('admin_dashboard') }}" class="{% if request.path == url_for('admin_dashboard') %}active{% endif %}"><i class="fas fa-chart-pie"></i> Admin Panel</a></li>
+                    <li><a href="{{ url_for('admin_dashboard') }}#tab-providers"><i class="fas fa-user-shield"></i> Providers</a></li>
+                    <li><a href="{{ url_for('admin_dashboard') }}#tab-users"><i class="fas fa-users"></i> Users</a></li>
+                    <li><a href="{{ url_for('admin_dashboard') }}#tab-bookings"><i class="fas fa-calendar-check"></i> Bookings</a></li>
+                    <li><a href="{{ url_for('admin_dashboard') }}#tab-payments"><i class="fas fa-credit-card"></i> Payments</a></li>
+                    <li><a href="{{ url_for('admin_dashboard') }}#tab-messages"><i class="fas fa-envelope"></i> Messages</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('dashboard') }}" class="{% if request.path == url_for('dashboard') %}active{% endif %}"><i class="fas fa-th-large"></i> Dashboard</a></li>
+                    <li><a href="{{ url_for('chatbot') }}" class="{% if request.path == url_for('chatbot') %}active{% endif %}"><i class="fas fa-robot"></i> AI Chatbot</a></li>
+                    <li><a href="{{ url_for('contact') }}" class="{% if request.path == url_for('contact') %}active{% endif %}"><i class="fas fa-headset"></i> Support</a></li>
+                {% endif %}
+                <li class="mt-4"><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <div class="admin-main">
+            {% if current_user.is_authenticated %}
+            <div class="top-navbar">
+                <h5 class="mb-0 fw-bold">Welcome, {{ current_user.username }}</h5>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('home') }}" class="btn btn-sm btn-outline-secondary">Home</a>
+                    <span class="badge bg-indigo-100 text-indigo-700 p-2" style="background:#eef2ff;color:#4338ca;border-radius:8px;">
+                        {{ current_user.role|capitalize }}
+                    </span>
+                </div>
+            </div>
+            {% else %}
+                <!-- Navbar for non-logged in users -->
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark rounded-4 mb-4 shadow">
+                    <div class="container">
+                        <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">⚡ SmartHub</a>
+                        <div class="collapse navbar-collapse">
+                            <ul class="navbar-nav ms-auto">
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Home</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}">Register</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            {% endif %}
+
+            <div class="container-fluid">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, msg in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ msg }}
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

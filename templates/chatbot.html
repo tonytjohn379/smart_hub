@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="col-md-10 mx-auto mt-4">
+    <div class="admin-card">
+        <div class="card-header" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff;">
+            <h4 class="mb-0"><i class="fas fa-robot me-2"></i> Smart Service Assistant</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Ask for a service (e.g. <i>"I need a plumber"</i>) or a general question.</p>
+            <form method="POST">
+                <div class="input-group mb-3">
+                    <input type="text" name="query" class="form-control" placeholder="Type your request here..." style="border-radius: 10px 0 0 10px; border: 2px solid #e5e7eb;" required>
+                    <button class="btn btn-dark px-4" type="submit" style="border-radius: 0 10px 10px 0;">Send</button>
+                </div>
+            </form>
+            
+            {% if response %}
+            <div class="mt-4 p-4 border rounded-4" style="background: #f8fafc; border-style: dashed !important; border-width: 2px !important;">
+                <h5 class="fw-bold mb-3">AI Response:</h5>
+                <div class="response-text" style="color: #334155; line-height: 1.6;">
+                    {{ response | safe }}
+                </div>
+                <hr>
+                <small class="text-muted"><i class="fas fa-info-circle me-1"></i> Powered by Local DB & Tavily AI</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

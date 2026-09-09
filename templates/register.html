@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="admin-card border-0 shadow-lg">
+            <div class="card-header text-center py-4" style="background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: white;">
+                <h3 class="mb-0 fw-bold">Create Account</h3>
+                <small class="opacity-75">Join the SmartHub community</small>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Username</label>
+                            <input type="text" name="username" class="form-control" style="border-radius: 8px;" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" name="email" class="form-control" style="border-radius: 8px;" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Password</label>
+                        <input type="password" name="password" class="form-control" style="border-radius: 8px;" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">I am a:</label>
+                        <select name="role" class="form-select" id="roleSelect" onchange="toggleProviderFields()" style="border-radius: 8px;">
+                            <option value="user">Customer</option>
+                            <option value="provider">Service Provider</option>
+                        </select>
+                    </div>
+                    
+                    <input type="hidden" name="lat" id="latField">
+                    <input type="hidden" name="lon" id="lonField">
+        
+                    <div id="providerFields" style="display:none;" class="bg-light p-4 rounded-4 mb-4 border">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-tools me-2"></i> Provider Details</h6>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Service Category</label>
+                            <input list="serviceList" name="service_type" class="form-control" placeholder="Type or select a service" style="border-radius: 8px;">
+                            <datalist id="serviceList">
+                                {% if services %}{% for s in services %}<option value="{{ s }}">{% endfor %}{% endif %}
+                                <option value="Plumber"><option value="Electrician"><option value="AC Technician"><option value="Cleaner"><option value="Ambulance">
+                            </datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">City Name</label>
+                            <input type="text" name="location_name" class="form-control" placeholder="e.g. Kochi" style="border-radius: 8px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Phone Number</label>
+                            <input type="tel" name="phone" id="phoneField" class="form-control" placeholder="e.g. +1 (555) 123-4567" style="border-radius: 8px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Upload Verification Proof</label>
+                            <input type="file" name="proof_doc" class="form-control" accept=".jpg,.png,.pdf" style="border-radius: 8px;">
+                            <small class="text-muted d-block mt-1">Required for provider accounts.</small>
+                        </div>
+                        <div class="mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-indigo w-100 py-2" onclick="getLocation()" style="border-radius: 8px;">
+                                <i class="fas fa-location-arrow me-2"></i> Detect Location
+                            </button>
+                            <div id="locStatus" class="text-center mt-2 small text-muted">No location detected</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold" style="border-radius: 10px;">
+                        Complete Registration
+                    </button>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Already have an account? <a href="{{ url_for('login') }}">Login here</a></small>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleProviderFields() {
+        var role = document.getElementById("roleSelect").value;
+        var providerFields = document.getElementById("providerFields");
+        var phoneField = document.getElementById("phoneField");
+        var serviceField = document.querySelector("input[name='service_type']");
+        var locationField = document.querySelector("input[name='location_name']");
+        var proofField = document.querySelector("input[name='proof_doc']");
+        
+        if (role === "provider") {
+            providerFields.style.display = "block";
+
+            phoneField.setAttribute("required", "required");
+            serviceField.setAttribute("required", "required");
+            locationField.setAttribute("required", "required");
+            proofField.setAttribute("required", "required");
+        } else {
+            providerFields.style.display = "none";
+
+            phoneField.removeAttribute("required");
+            serviceField.removeAttribute("required");
+            locationField.removeAttribute("required");
+            proofField.removeAttribute("required");
+        }
+    }
+
+    window.onload = function() {
+        toggleProviderFields();
+    };
+
+    function getLocation() {
+        var status = document.getElementById("locStatus");
+        if (navigator.geolocation) {
+            status.innerHTML = "Locating...";
+            navigator.geolocation.getCurrentPosition(function(p){
+                document.getElementById("latField").value = p.coords.latitude;
+                document.getElementById("lonField").value = p.coords.longitude;
+                status.innerHTML = "✅ GPS Captured!";
+                status.className = "text-success ms-2 fw-bold";
+            });
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-5 mb-4 bg-white rounded-3 shadow-sm text-center">
+    <h1 class="display-5 fw-bold">Smart Local Service Hub</h1>
+    <p class="col-md-8 fs-4 mx-auto">Find reliable plumbers, electricians, and technicians in seconds using our AI-powered platform.</p>
+    {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get Started</a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg">Login</a>
+    {% else %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-success btn-lg">Go to Dashboard</a>
+    {% endif %}
+</div>
+<div class="row align-items-md-stretch">
+    <div class="col-md-6">
+        <div class="h-100 p-5 text-white bg-dark rounded-3">
+            <h2>For Users</h2>
+            <p>Search for services, view ratings, and get AI recommendations for the best workers near you.</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="h-100 p-5 bg-light border rounded-3">
+            <h2>For Providers</h2>
+            <p>Register your service, get verified by Admin, and boost your visibility to local customers.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

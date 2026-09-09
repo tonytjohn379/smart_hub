@@ -828,21 +828,25 @@ def create_admin():
     admin_email = os.environ.get("ADMIN_EMAIL")
     admin_password = os.environ.get("ADMIN_PASSWORD")
 
+    print("=== ADMIN SETUP ===")
+    print("ADMIN_EMAIL configured:", bool(admin_email))
+    print("ADMIN_PASSWORD configured:", bool(admin_password))
+
     if not admin_email or not admin_password:
         print("ADMIN_EMAIL or ADMIN_PASSWORD is not configured.")
         return
 
     admin = User.query.filter_by(email=admin_email).first()
 
+    print("Admin user found:", bool(admin))
+
     if admin:
-        # Update existing admin
         admin.password = bcrypt.generate_password_hash(admin_password).decode('utf-8')
         admin.role = "admin"
         admin.is_verified = True
         db.session.commit()
         print(">>> ADMIN ACCOUNT UPDATED")
     else:
-        # Create new admin
         hashed_pw = bcrypt.generate_password_hash(admin_password).decode('utf-8')
 
         admin = User(

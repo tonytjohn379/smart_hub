@@ -836,16 +836,24 @@ def create_admin():
         print("ADMIN_EMAIL or ADMIN_PASSWORD is not configured.")
         return
 
-    admin = User.query.filter_by(email=admin_email).first()
+    # Find admin by email OR username
+    admin = User.query.filter(
+        (User.email == admin_email) | (User.username == "SuperAdmin")
+    ).first()
 
     print("Admin user found:", bool(admin))
 
     if admin:
+        admin.email = admin_email
         admin.password = bcrypt.generate_password_hash(admin_password).decode('utf-8')
+        admin.username = "SuperAdmin"
         admin.role = "admin"
         admin.is_verified = True
+
         db.session.commit()
+
         print(">>> ADMIN ACCOUNT UPDATED")
+
     else:
         hashed_pw = bcrypt.generate_password_hash(admin_password).decode('utf-8')
 

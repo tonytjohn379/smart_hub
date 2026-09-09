@@ -27,10 +27,11 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 # --- API SETUP ---
-TAVILY_API_KEY = "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" # REPLACE WITH YOUR REAL KEY
+TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY")
+
 try:
-    tavily = TavilyClient(api_key=TAVILY_API_KEY)
-except:
+    tavily = TavilyClient(api_key=TAVILY_API_KEY) if TAVILY_API_KEY else None
+except Exception:
     tavily = None
 
 # --- DATABASE MODELS ---

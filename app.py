@@ -15,7 +15,7 @@ except Exception:
     qrcode = None
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key_123'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 

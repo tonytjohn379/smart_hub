@@ -834,7 +834,15 @@ def create_admin():
 
     admin = User.query.filter_by(email=admin_email).first()
 
-    if not admin:
+    if admin:
+        # Update existing admin
+        admin.password = bcrypt.generate_password_hash(admin_password).decode('utf-8')
+        admin.role = "admin"
+        admin.is_verified = True
+        db.session.commit()
+        print(">>> ADMIN ACCOUNT UPDATED")
+    else:
+        # Create new admin
         hashed_pw = bcrypt.generate_password_hash(admin_password).decode('utf-8')
 
         admin = User(
@@ -850,9 +858,10 @@ def create_admin():
 
         print(">>> ADMIN ACCOUNT CREATED")
 
+with app.app_context():
+    db.create_all()
+    create_admin()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        create_admin()
     print("--- Starting on Port 5001 ---")
     app.run(debug=True, port=5001)
